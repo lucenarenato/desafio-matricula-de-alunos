@@ -33,8 +33,7 @@ class RegistrationController extends Controller
         }
 
         $registrations = $query->orderBy($sort_by, $sort_order)
-            ->paginate($per_page)
-            ->withQueryString();
+            ->paginate($per_page);
 
         return view('registrations.index', compact('registrations', 'search', 'sort_by', 'sort_order', 'per_page'));
     }
@@ -64,6 +63,20 @@ class RegistrationController extends Controller
     }
 
     /**
+     * Display the authenticated user's registrations.
+     */
+    public function my(): View
+    {
+        $user = auth()->user();
+        $registrations = $user->registrations()
+            ->with('curso')
+            ->latest()
+            ->get();
+
+        return view('registrations.my', compact('registrations'));
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Registration $registration): RedirectResponse
@@ -71,6 +84,25 @@ class RegistrationController extends Controller
         $registration->delete();
 
         return redirect()->route('registrations.index')
+            ->with('success', 'Matrícula cancelada com sucesso!');
+    }
+
+    /**
+     * Cancel the specified registration (for students).
+     */
+    public function cancel(Registration $registration): RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Ensure the user can only cancel their own registrations
+        if ($registration->user_id !== $user->id) {
+            return redirect()->route('registrations.my')
+                ->with('error', 'Você não tem permissão para cancelar esta matrícula.');
+        }
+
+        $registration->delete();
+
+        return redirect()->route('registrations.my')
             ->with('success', 'Matrícula cancelada com sucesso!');
     }
 

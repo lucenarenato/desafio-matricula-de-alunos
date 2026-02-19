@@ -20,6 +20,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Routes for students (authenticated users)
+    Route::get('cursos/list', [CursoController::class, 'list'])->name('cursos.list');
+    Route::post('cursos/{curso}/enroll', [CursoController::class, 'enroll'])->name('cursos.enroll');
+    Route::get('registrations/my', [RegistrationController::class, 'my'])->name('registrations.my');
+    Route::delete('registrations/{registration}/cancel', [RegistrationController::class, 'cancel'])->name('registrations.cancel');
+
     // CRUD de Cursos - apenas admin
     Route::middleware('admin')->group(function () {
         Route::resource('cursos', CursoController::class);

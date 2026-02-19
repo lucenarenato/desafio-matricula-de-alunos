@@ -14,9 +14,15 @@ class Registration extends Model
     protected $table = 'registrations';
 
     protected $fillable = [
+        'user_id',
         'students_id',
         'cursos_id',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function student(): BelongsTo
     {

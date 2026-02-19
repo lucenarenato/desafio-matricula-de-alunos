@@ -6,15 +6,29 @@
             <x-sidebar-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-sidebar-nav-link>
-            <x-sidebar-nav-link :href="route('cursos.index')" :active="request()->routeIs('cursos.index')">
-                {{ __('Cursos') }}
-            </x-sidebar-nav-link>
-            <x-sidebar-nav-link :href="route('students.index')" :active="request()->routeIs('students.index')">
-                {{ __('Students') }}
-            </x-sidebar-nav-link>
-            <x-sidebar-nav-link :href="route('registrations.index')" :active="request()->routeIs('registrations.index')">
-                {{ __('Registrations') }}
-            </x-sidebar-nav-link>
+
+            {{-- Menu para Alunos --}}
+            @if (auth()->user() && auth()->user()->isUser())
+                <x-sidebar-nav-link :href="route('cursos.list')" :active="request()->routeIs('cursos.list', 'cursos.enroll')">
+                    {{ __('Matricular em Cursos') }}
+                </x-sidebar-nav-link>
+                <x-sidebar-nav-link :href="route('registrations.my')" :active="request()->routeIs('registrations.my')">
+                    {{ __('Meus Cursos') }}
+                </x-sidebar-nav-link>
+            @endif
+
+            {{-- Menu para Admin --}}
+            @if (auth()->user() && auth()->user()->isAdmin())
+                <x-sidebar-nav-link :href="route('cursos.index')" :active="request()->routeIs('cursos.index')">
+                    {{ __('Cursos') }}
+                </x-sidebar-nav-link>
+                <x-sidebar-nav-link :href="route('students.index')" :active="request()->routeIs('students.index')">
+                    {{ __('Students') }}
+                </x-sidebar-nav-link>
+                <x-sidebar-nav-link :href="route('registrations.index')" :active="request()->routeIs('registrations.index')">
+                    {{ __('Registrations') }}
+                </x-sidebar-nav-link>
+            @endif
         </div>
     </div>
 </aside>

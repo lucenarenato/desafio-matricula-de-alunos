@@ -75,4 +75,12 @@ class User extends Authenticatable implements JWTSubject
             'role' => $this->role,
         ];
     }
+
+    /**
+     * Get the registrations for the user.
+     */
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
 }
