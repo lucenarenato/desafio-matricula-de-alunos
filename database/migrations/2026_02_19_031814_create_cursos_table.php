@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('type', array_column(CursoTypes::cases(), 'name'));
+            $table->enum('type', array_column(CursoTypes::cases(), 'value'));
             $table->integer('maximum_enrollments');
             $table->dateTime('registration_deadline');
             $table->timestamps();

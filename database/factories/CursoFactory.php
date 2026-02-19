@@ -20,7 +20,7 @@ class CursoFactory extends Factory
         return [
             'name' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'type' => $this->faker->randomElement([CursoTypes::Online->name, CursoTypes::InPerson->name]),
+            'type' => $this->faker->randomElement([CursoTypes::Online->value, CursoTypes::InPerson->value]),
             'maximum_enrollments' => $this->faker->numberBetween(20, 100),
             'registration_deadline' => $this->faker->dateTimeBetween('now', '+3 months'),
         ];
