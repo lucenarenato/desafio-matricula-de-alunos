@@ -15,9 +15,10 @@ return new class extends Migration
         Schema::create('cursos', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('description')->nullable();
             $table->enum('type', array_column(CursoTypes::cases(), 'name'));
-            $table->integer('maximum_number__enrollments');
-            $table->dateTime('allowed_registration_date');
+            $table->integer('maximum_enrollments');
+            $table->dateTime('registration_deadline');
             $table->timestamps();
         });
     }
