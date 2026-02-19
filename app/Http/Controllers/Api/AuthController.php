@@ -29,7 +29,7 @@ class AuthController extends \App\Http\Controllers\Controller
             ], 401);
         }
 
-        $token = auth()->attempt($credentials);
+        $token = auth('api')->attempt($credentials);
 
         if (!$token) {
             return response()->json([
@@ -44,7 +44,7 @@ class AuthController extends \App\Http\Controllers\Controller
             'user' => $user,
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 
@@ -53,7 +53,7 @@ class AuthController extends \App\Http\Controllers\Controller
      */
     public function logout(): JsonResponse
     {
-        auth()->logout();
+        auth('api')->logout();
 
         return response()->json([
             'success' => true,
@@ -68,7 +68,7 @@ class AuthController extends \App\Http\Controllers\Controller
     {
         return response()->json([
             'success' => true,
-            'user' => auth()->user(),
+            'user' => auth('api')->user(),
         ]);
     }
 
@@ -77,13 +77,13 @@ class AuthController extends \App\Http\Controllers\Controller
      */
     public function refresh(): JsonResponse
     {
-        $token = auth()->refresh();
+        $token = auth('api')->refresh();
 
         return response()->json([
             'success' => true,
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 }

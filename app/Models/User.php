@@ -6,9 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Tymon\JwtAuth\Contracts\JwtSubject;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JwtSubject
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -61,7 +61,7 @@ class User extends Authenticatable implements JwtSubject
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      */
-    public function getJwtIdentifier()
+    public function getJWTIdentifier()
     {
         return $this->getKey();
     }
@@ -69,7 +69,7 @@ class User extends Authenticatable implements JwtSubject
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.
      */
-    public function getJwtCustomClaims(): array
+    public function getJWTCustomClaims(): array
     {
         return [
             'role' => $this->role,
