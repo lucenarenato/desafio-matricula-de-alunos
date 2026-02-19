@@ -19,6 +19,7 @@ class CursoController extends Controller
         $type = request('type');
         $sort_by = request('sort_by', 'created_at');
         $sort_order = request('sort_order', 'desc');
+        $per_page = request('per_page', 15);
 
         $query = Curso::query();
 
@@ -32,7 +33,7 @@ class CursoController extends Controller
         }
 
         $cursos = $query->orderBy($sort_by, $sort_order)
-            ->paginate(15)
+            ->paginate($per_page)
             ->withQueryString();
 
         return view('cursos.index', compact('cursos', 'search', 'type', 'sort_by', 'sort_order'));
@@ -94,5 +95,22 @@ class CursoController extends Controller
 
         return redirect()->route('cursos.index')
             ->with('success', 'Curso deletado com sucesso!');
+    }
+
+    /**
+     * Bulk delete cursos
+     */
+    public function bulkDelete(): RedirectResponse
+    {
+        $ids = request()->validate([
+            'ids' => 'required|string',
+        ])['ids'];
+
+        $ids = array_map('intval', explode(',', $ids));
+
+        Curso::whereIn('id', $ids)->delete();
+
+        return redirect()->route('cursos.index')
+            ->with('success', count($ids) . ' curso(s) deletado(s) com sucesso!');
     }
 }
