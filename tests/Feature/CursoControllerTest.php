@@ -268,4 +268,107 @@ class CursoControllerTest extends TestCase
 
         $response->assertSessionHasErrors('name');
     }
+
+    /**
+     * Test list page is accessible by authenticated user
+     */
+    public function test_list_is_accessible_by_authenticated_user(): void
+    {
+        Curso::factory(5)->create();
+
+        $response = $this->actingAs($this->user)->get(route('cursos.list'));
+
+        $response->assertOk();
+        $response->assertViewIs('cursos.list');
+    }
+
+    /**
+     * Test list requires authentication
+     */
+    public function test_list_requires_authentication(): void
+    {
+        $response = $this->get(route('cursos.list'));
+
+        $response->assertRedirect('login');
+    }
+
+    /**
+     * Test user can enroll in course
+     */
+    public function test_user_can_enroll_in_course(): void
+    {
+        $curso = Curso::factory()->create();
+
+        $response = $this->actingAs($this->user)->post(route('cursos.enroll', $curso));
+
+        $this->assertDatabaseHas('registrations', [
+            'user_id' => $this->user->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response->assertRedirect(route('cursos.list'));
+        $response->assertSessionHas('success');
+    }
+
+    /**
+     * Test prevent duplicate enrollment for users
+     */
+    public function test_prevent_duplicate_enrollment_for_users(): void
+    {
+        $curso = Curso::factory()->create();
+
+        // First enrollment
+        $this->actingAs($this->user)->post(route('cursos.enroll', $curso));
+
+        // Attempt duplicate
+        $response = $this->actingAs($this->user)->post(route('cursos.enroll', $curso));
+
+        $response->assertSessionHas('error');
+        $response->assertRedirect(route('cursos.list'));
+    }
+
+    /**
+     * Test cannot enroll when course is full
+     */
+    public function test_cannot_enroll_when_course_is_full(): void
+    {
+        $curso = Curso::factory()->create(['maximum_enrollments' => 1]);
+        $student = Student::factory()->create();
+
+        // Fill course with Student
+        Registration::factory()->create([
+            'students_id' => $student->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->post(route('cursos.enroll', $curso));
+
+        $response->assertSessionHas('error');
+        $response->assertRedirect(route('cursos.list'));
+    }
+
+    /**
+     * Test cannot enroll after deadline
+     */
+    public function test_cannot_enroll_after_deadline(): void
+    {
+        $curso = Curso::factory()->create(['registration_deadline' => now()->subDay()]);
+
+        $response = $this->actingAs($this->user)->post(route('cursos.enroll', $curso));
+
+        $response->assertSessionHas('error');
+        $response->assertRedirect(route('cursos.list'));
+    }
+
+    /**
+     * Test enroll requires authentication
+     */
+    public function test_enroll_requires_authentication(): void
+    {
+        $curso = Curso::factory()->create();
+
+        $response = $this->post(route('cursos.enroll', $curso));
+
+        $response->assertRedirect('login');
+    }
 }

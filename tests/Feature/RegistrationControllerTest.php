@@ -293,4 +293,103 @@ class RegistrationControllerTest extends TestCase
 
         $response->assertSessionHasErrors('cursos_id');
     }
+
+    /**
+     * Test user can view their enrollments
+     */
+    public function test_user_can_view_their_enrollments(): void
+    {
+        $curso = Curso::factory()->create();
+
+        // Create enrollment with user_id
+        Registration::factory()->create([
+            'user_id' => $this->user->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('registrations.my'));
+
+        $response->assertOk();
+        $response->assertViewIs('registrations.my');
+        $response->assertViewHas('registrations');
+    }
+
+    /**
+     * Test my requires authentication
+     */
+    public function test_my_requires_authentication(): void
+    {
+        $response = $this->get(route('registrations.my'));
+
+        $response->assertRedirect('login');
+    }
+
+    /**
+     * Test user sees only their enrollments
+     */
+    public function test_user_sees_only_their_enrollments(): void
+    {
+        $otherUser = User::factory()->create(['role' => 'user']);
+        $curso = Curso::factory()->create();
+
+        Registration::factory()->create([
+            'user_id' => $otherUser->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('registrations.my'));
+        $registrations = $response->viewData('registrations');
+
+        $this->assertEquals(0, $registrations->count());
+    }
+
+    /**
+     * Test user can cancel their enrollment
+     */
+    public function test_user_can_cancel_their_enrollment(): void
+    {
+        $curso = Curso::factory()->create();
+
+        $registration = Registration::factory()->create([
+            'user_id' => $this->user->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->delete(route('registrations.cancel', $registration));
+
+        $this->assertDatabaseMissing('registrations', ['id' => $registration->id]);
+        $response->assertRedirect(route('registrations.my'));
+        $response->assertSessionHas('success');
+    }
+
+    /**
+     * Test user cannot cancel others enrollment
+     */
+    public function test_user_cannot_cancel_others_enrollment(): void
+    {
+        $otherUser = User::factory()->create(['role' => 'user']);
+        $curso = Curso::factory()->create();
+
+        $registration = Registration::factory()->create([
+            'user_id' => $otherUser->id,
+            'cursos_id' => $curso->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->delete(route('registrations.cancel', $registration));
+
+        $this->assertDatabaseHas('registrations', ['id' => $registration->id]);
+        $response->assertSessionHas('error');
+    }
+
+    /**
+     * Test cancel requires authentication
+     */
+    public function test_cancel_requires_authentication(): void
+    {
+        $registration = Registration::factory()->create();
+
+        $response = $this->delete(route('registrations.cancel', $registration));
+
+        $response->assertRedirect('login');
+    }
 }

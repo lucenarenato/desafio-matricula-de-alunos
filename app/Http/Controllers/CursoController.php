@@ -33,8 +33,7 @@ class CursoController extends Controller
         }
 
         $cursos = $query->orderBy($sort_by, $sort_order)
-            ->paginate($per_page)
-            ->withQueryString();
+            ->paginate($per_page);
 
         return view('cursos.index', compact('cursos', 'search', 'type', 'sort_by', 'sort_order'));
     }
@@ -112,5 +111,57 @@ class CursoController extends Controller
 
         return redirect()->route('cursos.index')
             ->with('success', count($ids) . ' curso(s) deletado(s) com sucesso!');
+    }
+
+    /**
+     * Display a listing of courses available for enrollment (for students).
+     */
+    public function list(): View
+    {
+        $search = request('search');
+        $type = request('type');
+        $sort_by = request('sort_by', 'created_at');
+        $sort_order = request('sort_order', 'desc');
+        $per_page = request('per_page', 12);
+
+        $query = Curso::query();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+        }
+
+        if ($type && $type !== 'all') {
+            $query->where('type', $type);
+        }
+
+        $cursos = $query->orderBy($sort_by, $sort_order)
+            ->paginate($per_page);
+
+        return view('cursos.list', compact('cursos', 'search', 'type', 'sort_by', 'sort_order'));
+    }
+
+    /**
+     * Enroll the authenticated user in a course.
+     */
+    public function enroll(Curso $curso): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($user->registrations()->where('cursos_id', $curso->id)->exists()) {
+            return redirect()->route('cursos.list')->with('error', 'Você já está matriculado neste curso.');
+        }
+
+        if ($curso->maximum_enrollments - $curso->registrations()->count() <= 0) {
+            return redirect()->route('cursos.list')->with('error', 'Este curso não tem mais vagas disponíveis.');
+        }
+
+        if ($curso->registration_deadline->isPast()) {
+            return redirect()->route('cursos.list')->with('error', 'O prazo de inscrição para este curso já encerrou.');
+        }
+
+        $user->registrations()->create(['cursos_id' => $curso->id]);
+
+        return redirect()->route('cursos.list')->with('success', 'Matrícula realizada com sucesso!');
     }
 }

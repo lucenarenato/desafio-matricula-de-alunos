@@ -94,15 +94,28 @@
                                     <td class="px-6 py-4 text-right space-x-2">
                                         <a href="{{ route('cursos.show', $curso) }}"
                                             class="text-blue-600 hover:text-blue-900">Detalhes</a>
-                                        <a href="{{ route('cursos.edit', $curso) }}"
-                                            class="text-green-600 hover:text-green-900">Editar</a>
-                                        <form action="{{ route('cursos.destroy', $curso) }}" method="POST"
-                                            class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Tem certeza?')">Deletar</button>
-                                        </form>
+                                        @if (auth()->user() && auth()->user()->isAdmin())
+                                            <a href="{{ route('cursos.edit', $curso) }}"
+                                                class="text-green-600 hover:text-green-900">Editar</a>
+                                            <form action="{{ route('cursos.destroy', $curso) }}" method="POST"
+                                                class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900"
+                                                    onclick="return confirm('Tem certeza?')">Deletar</button>
+                                            </form>
+                                        @elseif(auth()->user() && auth()->user()->isUser())
+                                            @if (auth()->user()->registrations()->where('cursos_id', $curso->id)->exists())
+                                                <span class="text-gray-600">Matriculado</span>
+                                            @else
+                                                <form method="POST" action="{{ route('cursos.enroll', $curso) }}"
+                                                    class="inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="text-green-600 hover:text-green-900">Matricular</button>
+                                                </form>
+                                            @endif
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

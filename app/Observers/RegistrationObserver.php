@@ -35,26 +35,48 @@ class RegistrationObserver
         $this->cacheManager->invalidateUsers();
 
         // Get relationships
-        $student = $registration->student;
         $curso = $registration->curso;
+
+        // Determine if it's a Student or User registration
+        if ($registration->user_id) {
+            // Registration from a common user
+            $user = $registration->user;
+            if (!$user) {
+                return;
+            }
+
+            $email = $user->email;
+            $name = $user->name;
+            $context = "User {$name}";
+        } else {
+            // Registration from a Student
+            $student = $registration->student;
+            if (!$student) {
+                return;
+            }
+
+            $email = $student->email;
+            $name = $student->name;
+            $context = "Student {$name}";
+        }
 
         // Send confirmation email
         $this->mailManager->sendRegistrationConfirmation(
-            $student->email,
-            $student->name,
+            $email,
+            $name,
             $curso->name
         );
 
         // Send notification via multiple channels
         $this->notificationManager->sendMultiple(
             ['email', 'database'],
-            $student->email,
+            $email,
             'Matrícula Confirmada',
             "Você foi matriculado no curso: {$curso->name}"
         );
 
         // Log event
-        \Log::info("Registration created: Student {$student->name} enrolled in {$curso->name}");
+        \Log::info("Registration created: {$context} enrolled in {$curso->name}");
     }
 
     /**
@@ -66,17 +88,39 @@ class RegistrationObserver
         $this->cacheManager->invalidateUsers();
 
         // Get relationships
-        $student = $registration->student;
         $curso = $registration->curso;
 
-        // Notify student
+        // Determine if it's a Student or User registration
+        if ($registration->user_id) {
+            // Registration from a common user
+            $user = $registration->user;
+            if (!$user) {
+                return;
+            }
+
+            $email = $user->email;
+            $name = $user->name;
+            $context = "User {$name}";
+        } else {
+            // Registration from a Student
+            $student = $registration->student;
+            if (!$student) {
+                return;
+            }
+
+            $email = $student->email;
+            $name = $student->name;
+            $context = "Student {$name}";
+        }
+
+        // Notify about cancellation
         $this->notificationManager->send(
-            $student->email,
+            $email,
             'Matrícula Cancelada',
             "Sua matrícula no curso {$curso->name} foi cancelada."
         );
 
         // Log event
-        \Log::info("Registration deleted: Student {$student->name} unenrolled from {$curso->name}");
+        \Log::info("Registration deleted: {$context} unenrolled from {$curso->name}");
     }
 }
