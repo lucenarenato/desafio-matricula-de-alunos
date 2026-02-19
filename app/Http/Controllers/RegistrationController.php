@@ -19,6 +19,7 @@ class RegistrationController extends Controller
         $search = request('search');
         $sort_by = request('sort_by', 'created_at');
         $sort_order = request('sort_order', 'desc');
+        $per_page = request('per_page', 15);
 
         $query = Registration::with('student', 'curso');
 
@@ -32,10 +33,10 @@ class RegistrationController extends Controller
         }
 
         $registrations = $query->orderBy($sort_by, $sort_order)
-            ->paginate(15)
+            ->paginate($per_page)
             ->withQueryString();
 
-        return view('registrations.index', compact('registrations', 'search', 'sort_by', 'sort_order'));
+        return view('registrations.index', compact('registrations', 'search', 'sort_by', 'sort_order', 'per_page'));
     }
 
     /**
@@ -71,5 +72,22 @@ class RegistrationController extends Controller
 
         return redirect()->route('registrations.index')
             ->with('success', 'Matrícula cancelada com sucesso!');
+    }
+
+    /**
+     * Bulk delete registrations
+     */
+    public function bulkDelete(): RedirectResponse
+    {
+        $ids = request()->validate([
+            'ids' => 'required|string',
+        ])['ids'];
+
+        $ids = array_map('intval', explode(',', $ids));
+
+        Registration::whereIn('id', $ids)->delete();
+
+        return redirect()->route('registrations.index')
+            ->with('success', count($ids) . ' matrícula(s) canceladas com sucesso!');
     }
 }

@@ -18,6 +18,7 @@ class StudentController extends Controller
         $search = request('search');
         $sort_by = request('sort_by', 'created_at');
         $sort_order = request('sort_order', 'desc');
+        $per_page = request('per_page', 15);
 
         $query = Student::query();
 
@@ -29,10 +30,10 @@ class StudentController extends Controller
         }
 
         $students = $query->orderBy($sort_by, $sort_order)
-            ->paginate(15)
+            ->paginate($per_page)
             ->withQueryString();
 
-        return view('students.index', compact('students', 'search', 'sort_by', 'sort_order'));
+        return view('students.index', compact('students', 'search', 'sort_by', 'sort_order', 'per_page'));
     }
 
     /**
@@ -91,5 +92,22 @@ class StudentController extends Controller
 
         return redirect()->route('students.index')
             ->with('success', 'Aluno deletado com sucesso!');
+    }
+
+    /**
+     * Bulk delete students
+     */
+    public function bulkDelete(): RedirectResponse
+    {
+        $ids = request()->validate([
+            'ids' => 'required|string',
+        ])['ids'];
+
+        $ids = array_map('intval', explode(',', $ids));
+
+        Student::whereIn('id', $ids)->delete();
+
+        return redirect()->route('students.index')
+            ->with('success', count($ids) . ' aluno(s) deletado(s) com sucesso!');
     }
 }
