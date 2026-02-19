@@ -1,0 +1,93 @@
+# Use a imagem base do PHP 8.2 FPM Alpine
+FROM php:8.2-fpm-alpine
+
+# Variáveis de ambiente
+ENV GROUP_ID=1000 \
+    USER_ID=1000 \
+    USER_NAME=webuser \
+    GROUP_NAME=webuser \
+    WORKDIR=/var/www/html \
+    DOCUMENT_ROOT=${WORKDIR} \
+    LARAVEL_PROCS_NUMBER=1 \
+    TZ=America/Sao_Paulo
+
+# Configurar o fuso horário
+RUN apk add --no-cache tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
+# Instalar dependências necessárias e ferramentas
+RUN apk --update add --no-cache \
+    wget \
+    curl \
+    git \
+    grep \
+    gcc \
+    build-base \
+    libmemcached-dev \
+    libxml2-dev \
+    imagemagick-dev \
+    pcre-dev \
+    libtool \
+    make \
+    autoconf \
+    automake \
+    g++ \
+    nasm \
+    cyrus-sasl-dev \
+    libgsasl-dev \
+    supervisor \
+    libpq-dev \
+    libpng-dev \
+    zlib-dev \
+    vips-dev \
+    $PHPIZE_DEPS
+
+# Instalar o Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+# Instalar extensões PHP comuns
+RUN docker-php-ext-install mysqli pdo pdo_mysql xml pcntl sockets
+
+# Instalar a extensão GD
+RUN apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install gd intl
+
+# Instalar extensões PECL
+RUN pecl channel-update pecl.php.net && \
+    pecl install memcached imagick && \
+    docker-php-ext-enable memcached imagick
+
+# Criar grupo e usuário (verificando se já não existem)
+RUN if ! getent group $GROUP_NAME; then addgroup -g $GROUP_ID $GROUP_NAME; fi && \
+    if ! getent passwd $USER_NAME; then adduser -D -u $USER_ID -G $GROUP_NAME $USER_NAME -s /bin/sh; fi
+
+# Configurar diretórios de trabalho
+WORKDIR $WORKDIR
+RUN mkdir -p storage bootstrap/cache && \
+    chown -R $USER_NAME:$GROUP_NAME storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
+
+# Limpar cache do APK
+RUN rm -rf /var/cache/apk/*
+
+# Copiar configuração personalizada do PHP-FPM
+COPY ./php-fpm/www.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Ajustar o www.conf para usar o usuário correto
+RUN sed -i "s/user = www-data/user = $USER_NAME/g" /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i "s/group = www-data/group = $GROUP_NAME/g" /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i "s/listen.owner = www-data/listen.owner = $USER_NAME/g" /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i "s/listen.group = www-data/listen.group = $GROUP_NAME/g" /usr/local/etc/php-fpm.d/www.conf
+
+# Garantir permissões corretas
+RUN chown -R $USER_NAME:$GROUP_NAME /usr/local/etc/php-fpm.d/
+
+# Expose port
+EXPOSE 9000
+
+# Mudar para usuário não-root
+USER $USER_NAME
+
+CMD ["php-fpm"]

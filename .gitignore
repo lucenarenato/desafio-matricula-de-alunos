@@ -23,3 +23,7 @@ yarn-error.log
 /.zed
 /anotacoes
 /database-app
+docker/logs/nginx/*.log
+/docker/logs/nginx/*.log
+docker/logs/nginx/laravel_access.log
+docker/certbot/logs
