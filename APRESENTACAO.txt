@@ -225,8 +225,8 @@ Se você desejar expandir o projeto no futuro, aqui estão algumas ideias:
 
 ---
 
-**Desenvolvido por:** GitHub Copilot  
-**Framework:** Laravel 11  
-**Status:** ✅ Pronto para Uso  
+**Desenvolvido por:** Renato Lucena
+**Framework:** Laravel 11
+**Status:** ✅ Pronto para Uso
 
 Aproveite! 🚀
