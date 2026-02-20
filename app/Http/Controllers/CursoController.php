@@ -33,9 +33,10 @@ class CursoController extends Controller
         }
 
         $cursos = $query->orderBy($sort_by, $sort_order)
-            ->paginate($per_page);
+            ->paginate($per_page)
+            ->withQueryString();
 
-        return view('cursos.index', compact('cursos', 'search', 'type', 'sort_by', 'sort_order'));
+        return view('cursos.index', compact('cursos', 'search', 'type', 'sort_by', 'sort_order', 'per_page'));
     }
 
     /**

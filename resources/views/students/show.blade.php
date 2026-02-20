@@ -70,13 +70,10 @@
                                     <td class="px-6 py-4 text-gray-900 dark:text-gray-100">
                                         {{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="px-6 py-4 text-right">
-                                        <form action="{{ route('registrations.destroy', $registration) }}"
-                                            method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 text-sm"
-                                                onclick="return confirm('Tem certeza que deseja cancelar essa matrícula?')">Cancelar</button>
-                                        </form>
+                                        <button type="button" class="text-red-600 hover:text-red-900 text-sm"
+                                            onclick="confirmCancelRegistration('{{ route('registrations.destroy', $registration) }}')">
+                                            Cancelar
+                                        </button>
                                     </td>
                                 </tr>
                             @empty
@@ -102,4 +99,31 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function confirmCancelRegistration(url) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: 'Deseja realmente cancelar essa matrícula?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, cancelar!',
+                cancelButtonText: 'Não'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        @csrf
+                        @method('DELETE')
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
 </x-app-layout>

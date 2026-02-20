@@ -23,10 +23,10 @@
                     {{ __('Cursos') }}
                 </x-sidebar-nav-link>
                 <x-sidebar-nav-link :href="route('students.index')" :active="request()->routeIs('students.index')">
-                    {{ __('Students') }}
+                    {{ __('Estudantes') }}
                 </x-sidebar-nav-link>
                 <x-sidebar-nav-link :href="route('registrations.index')" :active="request()->routeIs('registrations.index')">
-                    {{ __('Registrations') }}
+                    {{ __('Inscrições') }}
                 </x-sidebar-nav-link>
             @endif
         </div>

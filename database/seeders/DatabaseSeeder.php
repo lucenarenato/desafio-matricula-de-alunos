@@ -35,7 +35,12 @@ class DatabaseSeeder extends Seeder
         }
 
         // Criar cursos
-        $cursos = Curso::factory(10)->create();
+        $this->call([
+            CursoRealSeeder::class,
+            // outros seeders...
+        ]);
+
+        $cursos = Curso::factory(5)->create();
 
         // Criar alunos
         $students = Student::factory(30)->create();
@@ -51,5 +56,6 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+        $this->command->info('✅ Database seeded successfully!');
     }
 }

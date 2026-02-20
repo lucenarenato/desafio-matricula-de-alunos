@@ -39,6 +39,17 @@
                             <option value="desc" {{ $sort_order === 'desc' ? 'selected' : '' }}>Descendente</option>
                             <option value="asc" {{ $sort_order === 'asc' ? 'selected' : '' }}>Ascendente</option>
                         </select>
+                        <select name="per_page" onchange="this.form.submit()"
+                            class="px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600">
+                            <option value="10" {{ request('per_page', 15) == 10 ? 'selected' : '' }}>10 por página
+                            </option>
+                            <option value="25" {{ request('per_page', 15) == 25 ? 'selected' : '' }}>25 por página
+                            </option>
+                            <option value="50" {{ request('per_page', 15) == 50 ? 'selected' : '' }}>50 por página
+                            </option>
+                            <option value="100" {{ request('per_page', 15) == 100 ? 'selected' : '' }}>100 por
+                                página</option>
+                        </select>
                         <button type="submit"
                             class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                             Filtrar
@@ -47,12 +58,30 @@
                 </div>
             </div>
 
+            <!-- Botão de Deleção em Massa (apenas para admins) -->
+            @if (auth()->user() && auth()->user()->isAdmin())
+                <div class="mb-4">
+                    <button type="button" id="bulk-delete-btn" onclick="bulkDelete()"
+                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        Deletar Selecionados (<span id="selected-count">0</span>)
+                    </button>
+                </div>
+            @endif
+
             <!-- Tabela de Cursos -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                             <tr>
+                                @if (auth()->user() && auth()->user()->isAdmin())
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                        <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"
+                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200">
+                                    </th>
+                                @endif
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
                                     Nome</th>
@@ -77,6 +106,13 @@
                             @foreach ($cursos as $curso)
                                 <tr
                                     class="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    @if (auth()->user() && auth()->user()->isAdmin())
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox"
+                                                class="item-checkbox rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                                                value="{{ $curso->id }}" onchange="updateBulkDeleteButton()">
+                                        </td>
+                                    @endif
                                     <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $curso->name }}</td>
                                     <td class="px-6 py-4 text-gray-900 dark:text-gray-100">
                                         <span
@@ -97,13 +133,8 @@
                                         @if (auth()->user() && auth()->user()->isAdmin())
                                             <a href="{{ route('cursos.edit', $curso) }}"
                                                 class="text-green-600 hover:text-green-900">Editar</a>
-                                            <form action="{{ route('cursos.destroy', $curso) }}" method="POST"
-                                                class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900"
-                                                    onclick="return confirm('Tem certeza?')">Deletar</button>
-                                            </form>
+                                            <button type="button" class="text-red-600 hover:text-red-900"
+                                                onclick="confirmDelete('{{ route('cursos.destroy', $curso) }}', 'curso')">Deletar</button>
                                         @elseif(auth()->user() && auth()->user()->isUser())
                                             @if (auth()->user()->registrations()->where('cursos_id', $curso->id)->exists())
                                                 <span class="text-gray-600">Matriculado</span>
@@ -123,9 +154,97 @@
                     </table>
                 </div>
                 <div class="p-6">
-                    {{ $cursos->links() }}
+                    {{ $cursos->appends(request()->except('page'))->links() }}
                 </div>
             </div>
         </div>
     </div>
+
+    @if (auth()->user() && auth()->user()->isAdmin())
+        <!-- Form oculto para bulk delete -->
+        <form id="bulk-delete-form" action="{{ route('cursos.bulkDelete') }}" method="POST" style="display: none;">
+            @csrf
+            <input type="hidden" name="ids" id="bulk-delete-ids">
+        </form>
+
+        <script>
+            function toggleSelectAll(checkbox) {
+                const checkboxes = document.querySelectorAll('.item-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.checked = checkbox.checked;
+                });
+                updateBulkDeleteButton();
+            }
+
+            function updateBulkDeleteButton() {
+                const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+                const count = checkboxes.length;
+                const btn = document.getElementById('bulk-delete-btn');
+                const countSpan = document.getElementById('selected-count');
+
+                countSpan.textContent = count;
+                btn.disabled = count === 0;
+
+                // Update "select all" checkbox state
+                const allCheckboxes = document.querySelectorAll('.item-checkbox');
+                const selectAllCheckbox = document.getElementById('select-all');
+                selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
+            }
+
+            function confirmDelete(url, type) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: `Deseja realmente deletar este ${type}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, deletar!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = url;
+                        form.innerHTML = `
+                            @csrf
+                            @method('DELETE')
+                        `;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+
+            function bulkDelete() {
+                const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+                if (checkboxes.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atenção',
+                        text: 'Selecione pelo menos um item para deletar.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: `Deseja realmente deletar ${checkboxes.length} item(ns) selecionado(s)?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, deletar!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+                        document.getElementById('bulk-delete-ids').value = ids;
+                        document.getElementById('bulk-delete-form').submit();
+                    }
+                });
+            }
+        </script>
+    @endif
 </x-app-layout>

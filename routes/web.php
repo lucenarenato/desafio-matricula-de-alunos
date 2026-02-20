@@ -29,13 +29,13 @@ Route::middleware('auth')->group(function () {
     // CRUD de Cursos - apenas admin
     Route::middleware('admin')->group(function () {
         Route::resource('cursos', CursoController::class);
-        Route::delete('cursos/bulk-delete', [CursoController::class, 'bulkDelete'])->name('cursos.bulkDelete');
+        Route::post('cursos/bulk-delete', [CursoController::class, 'bulkDelete'])->name('cursos.bulkDelete');
 
         Route::resource('students', StudentController::class);
-        Route::delete('students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulkDelete');
+        Route::post('students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulkDelete');
 
         Route::resource('registrations', RegistrationController::class);
-        Route::delete('registrations/bulk-delete', [RegistrationController::class, 'bulkDelete'])->name('registrations.bulkDelete');
+        Route::post('registrations/bulk-delete', [RegistrationController::class, 'bulkDelete'])->name('registrations.bulkDelete');
     });
 });
 
