@@ -1,6 +1,6 @@
 <div {{ $attributes }}>
     <a href="#!" class="navbar-brand navbar-brand-autodark">
-        <img src="img/api-sports-small-logo.png"
+        <img src="{{ asset('img/api-sports-small-logo.png') }}"
             class="border-2 border-orange-500 dark:border-orange-400 rounded-full w-auto h-auto object-cover"
             alt="Logo Sistema">
     </a>
