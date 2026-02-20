@@ -33,7 +33,8 @@ class RegistrationController extends Controller
         }
 
         $registrations = $query->orderBy($sort_by, $sort_order)
-            ->paginate($per_page);
+            ->paginate($per_page)
+            ->withQueryString();
 
         return view('registrations.index', compact('registrations', 'search', 'sort_by', 'sort_order', 'per_page'));
     }
