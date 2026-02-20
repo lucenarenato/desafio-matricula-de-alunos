@@ -75,6 +75,7 @@ cp .env.example .env
 ### Gerar relatório de cobertura
 ```bash
 ./vendor/bin/sail artisan test --coverage
+```
 
 ## About 
 
