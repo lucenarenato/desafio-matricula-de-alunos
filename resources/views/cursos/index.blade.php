@@ -133,13 +133,8 @@
                                         @if (auth()->user() && auth()->user()->isAdmin())
                                             <a href="{{ route('cursos.edit', $curso) }}"
                                                 class="text-green-600 hover:text-green-900">Editar</a>
-                                            <form action="{{ route('cursos.destroy', $curso) }}" method="POST"
-                                                class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900"
-                                                    onclick="return confirm('Tem certeza?')">Deletar</button>
-                                            </form>
+                                            <button type="button" class="text-red-600 hover:text-red-900"
+                                                onclick="confirmDelete('{{ route('cursos.destroy', $curso) }}', 'curso')">Deletar</button>
                                         @elseif(auth()->user() && auth()->user()->isUser())
                                             @if (auth()->user()->registrations()->where('cursos_id', $curso->id)->exists())
                                                 <span class="text-gray-600">Matriculado</span>
@@ -196,20 +191,59 @@
                 selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
             }
 
+            function confirmDelete(url, type) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: `Deseja realmente deletar este ${type}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, deletar!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = url;
+                        form.innerHTML = `
+                            @csrf
+                            @method('DELETE')
+                        `;
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+
             function bulkDelete() {
                 const checkboxes = document.querySelectorAll('.item-checkbox:checked');
                 if (checkboxes.length === 0) {
-                    alert('Selecione pelo menos um item para deletar.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atenção',
+                        text: 'Selecione pelo menos um item para deletar.',
+                        confirmButtonText: 'OK'
+                    });
                     return;
                 }
 
-                if (!confirm(`Tem certeza que deseja deletar ${checkboxes.length} item(ns) selecionado(s)?`)) {
-                    return;
-                }
-
-                const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
-                document.getElementById('bulk-delete-ids').value = ids;
-                document.getElementById('bulk-delete-form').submit();
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: `Deseja realmente deletar ${checkboxes.length} item(ns) selecionado(s)?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, deletar!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+                        document.getElementById('bulk-delete-ids').value = ids;
+                        document.getElementById('bulk-delete-form').submit();
+                    }
+                });
             }
         </script>
     @endif

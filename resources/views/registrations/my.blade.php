@@ -56,16 +56,11 @@
                                         class="flex-1 text-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                         Ver Detalhes
                                     </a>
-                                    <form method="POST" action="{{ route('registrations.cancel', $registration) }}"
-                                        class="flex-1">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                                            onclick="return confirm('Deseja realmente cancelar sua inscrição?')">
-                                            Cancelar Inscrição
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        class="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                        onclick="confirmCancelRegistration('{{ route('registrations.cancel', $registration) }}')">
+                                        Cancelar Inscrição
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -81,4 +76,31 @@
             @endif
         </div>
     </div>
+
+    <script>
+        function confirmCancelRegistration(url) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: 'Deseja realmente cancelar sua inscrição neste curso?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, cancelar!',
+                cancelButtonText: 'Não'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        @csrf
+                        @method('DELETE')
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
 </x-app-layout>

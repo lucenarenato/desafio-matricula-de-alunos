@@ -116,13 +116,8 @@
                                     <td class="px-6 py-4 text-gray-900 dark:text-gray-100">
                                         {{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="px-6 py-4 text-right">
-                                        <form action="{{ route('registrations.destroy', $registration) }}"
-                                            method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Tem certeza?')">Cancelar</button>
-                                        </form>
+                                        <button type="button" class="text-red-600 hover:text-red-900"
+                                            onclick="confirmDelete('{{ route('registrations.destroy', $registration) }}', 'matrícula')">Cancelar</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -166,20 +161,59 @@
             selectAllCheckbox.checked = allCheckboxes.length > 0 && count === allCheckboxes.length;
         }
 
+        function confirmDelete(url, type) {
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: `Deseja realmente cancelar esta ${type}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, cancelar!',
+                cancelButtonText: 'Não'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        @csrf
+                        @method('DELETE')
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
         function bulkDelete() {
             const checkboxes = document.querySelectorAll('.item-checkbox:checked');
             if (checkboxes.length === 0) {
-                alert('Selecione pelo menos um item para deletar.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atenção',
+                    text: 'Selecione pelo menos um item para deletar.',
+                    confirmButtonText: 'OK'
+                });
                 return;
             }
 
-            if (!confirm(`Tem certeza que deseja deletar ${checkboxes.length} item(ns) selecionado(s)?`)) {
-                return;
-            }
-
-            const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
-            document.getElementById('bulk-delete-ids').value = ids;
-            document.getElementById('bulk-delete-form').submit();
+            Swal.fire({
+                title: 'Tem certeza?',
+                text: `Deseja realmente cancelar ${checkboxes.length} matrícula(s) selecionada(s)?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, cancelar!',
+                cancelButtonText: 'Não'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+                    document.getElementById('bulk-delete-ids').value = ids;
+                    document.getElementById('bulk-delete-form').submit();
+                }
+            });
         }
     </script>
 </x-app-layout>
