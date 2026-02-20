@@ -6,7 +6,7 @@
 
 <p align="center"><a href="https://github.com/lucenarenato" target="_blank"><img src="Inscricoes-2026-02-20_00-02.png" width="400" alt="Prints"></a></p>
 
-<p align="center"><a href="https://github.com/lucenarenato" target="_blank"><img src="Alunos-2026-02-20_00-01.png" width="400" alt="Prints"></a></p>
+<p align="center"><a href="https://github.com/lucenarenato" target="_blank"><img src="Aluno-2026-02-20_00-00.png" width="400" alt="Prints"></a></p>
 
 <p align="center"><a href="https://github.com/lucenarenato" target="_blank"><img src="Email-2026-02-19_23-59.png" width="400" alt="Prints"></a></p>
 
